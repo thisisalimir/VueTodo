@@ -12,9 +12,14 @@
             <input v-else type="text" class="todo-item-edit" v-model="title" @blur="doneEdit"
                    @keyup.enter="doneEdit" @keyup.esc="cancelEdit" v-focus>
         </div>
-        <!--  When User Click On This remove Item  -->
-        <div class="remove-item" @click="removeTodo(todo.id)">
-            &times;
+
+        <div>
+            <!--On Click Make Title Plural-->
+            <button @click="pluralize">Plural</button>
+            <!--  When User Click On This remove Item  -->
+            <span class="remove-item" @click="removeTodo(todo.id)">
+                &times;
+            </span>
         </div>
     </div>
 </template>
@@ -45,6 +50,14 @@
                 'beforeEditCache': '',
             }
         },
+        created() {
+            //On Click call handle
+            eventBus.$on('pluralize', this.handlePluralize);
+        },
+        beforeDestroy() {
+            //Before Destroy Item Call off handle
+            eventBus.$off('pluralize', this.handlePluralize);
+        },
         //Watcher is watch when props are changed
         watch: {
             checkAll() {
@@ -72,7 +85,7 @@
                 }
                 this.editing = false;
                 //Create Event for pass to Parent Call finishedEdit and pass Data
-                this.$emit('finishedEdit', {
+                eventBus.$emit('finishedEdit', {
                     'id': this.id,
                     'title': this.title,
                     'completed': this.completed,
@@ -87,7 +100,21 @@
                 //Here Use $emit because we want to pass this to parent component method
                 // Now first parameter is name of Event
                 // second parameter we pass item we want to pass
-                this.$emit('removedTodo', id);
+                eventBus.$emit('removedTodo', id);
+            },
+            //Event Bus method
+            pluralize() {
+                eventBus.$emit('pluralize');
+            },
+            //Add s to Title
+            handlePluralize() {
+                this.title = this.title + 's';
+                eventBus.$emit('finishedEdit', {
+                    'id': this.id,
+                    'title': this.title,
+                    'completed': this.completed,
+                    'editing': this.editing,
+                });
             }
         }
     }
