@@ -9,23 +9,9 @@
         <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
             <!--  Loop Through Each Items also pass index of items
                    :key is for pass items id-->
-            <div v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item">
-                <div class="todo-item-left">
-                    <!--Complete-->
-                    <input type="checkbox" v-model="todo.completed">
-                    <!--Edit Tasks Using Double Click Event-->
-                    <div class="todo-item-label" @dblclick="editTodo(todo)" v-if="!todo.editing"
-                         :class="{ completed : todo.completed }">{{ todo.title }}
-                    </div>
-                    <!--Save Edit also if User Change Mind We brings Old Title-->
-                    <input v-else type="text" class="todo-item-edit" v-model="todo.title" @blur="doneEdit(todo)"
-                           @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)" v-focus>
-                </div>
-                <!--  When User Click On This remove Item  -->
-                <div class="remove-item" @click="removeTodo(index)">
-                    &times;
-                </div>
-            </div>
+            <todo-item v-for="(todo) in todosFiltered" :key="todo.id" :todo="todo"
+                       :checkAll="!anyRemaining"
+                       @removedTodo="removeTodo" @finishedEdit="finishedEdit"></todo-item>
         </transition-group>
         <div class="extra-container">
             <!--Show Remaining Task-->
@@ -50,8 +36,13 @@
 </template>
 
 <script>
+    import TodoItem from "./TodoItem";
+
     export default {
         name: 'todo-list',
+        components: {
+            TodoItem,
+        },
         data() {
             return {
                 newTodo: '',
@@ -94,14 +85,6 @@
                 return this.todos.filter(todo => todo.completed).length > 0
             }
         },
-        directives: {
-            focus: {//this is For When User Click On Items Focus immediately
-                // directive definition
-                inserted: function (el) {
-                    el.focus()
-                }
-            }
-        },
         methods: {
             addTodo() {//Add to Do
                 if (this.newTodo.trim().length == 0) {//Validation
@@ -117,21 +100,9 @@
                 //Increment Id
                 this.idForTodo++;
             },
-            editTodo(todo) {//For Edit
-                this.beforeEditCache = todo.title;
-                todo.editing = true;
-            },
-            doneEdit(todo) {//For Done
-                if (todo.title.trim().length == 0) {//Validation
-                    todo.title = this.beforeEditCache;
-                }
-                todo.editing = false;
-            },
-            cancelEdit(todo) {//For When User Decide to Cancel Edit
-                todo.title = this.beforeEditCache;
-                todo.editing = false;
-            },
-            removeTodo(index) {//Remove Task
+            removeTodo(id) {//Remove Task
+                //Find Index of items and check with id passed to method
+                const index = this.todos.findIndex((item) => item.id == id);
                 //Splice 1 Item
                 this.todos.splice(index, 1);
             },
@@ -142,6 +113,12 @@
             },
             clearCompleted() {//Clear All Completed Task
                 this.todos = this.todos.filter(todo => !todo.completed)
+            },
+            finishedEdit(data) {
+                //Check Items id with data Id passed to method
+                const index = this.todos.findIndex((item) => item.id == data.id);
+                //splice 1 item
+                this.todos.splice(index, 1, data)
             }
         }
     }
