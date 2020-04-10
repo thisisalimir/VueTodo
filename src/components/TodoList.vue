@@ -14,14 +14,14 @@
         </transition-group>
         <div class="extra-container">
             <!--Show Remaining Task-->
-            <todo-check-all :anyRemaining="anyRemaining"></todo-check-all>
-            <todo-items-remaining :remainig="remainig"></todo-items-remaining>
+            <todo-check-all></todo-check-all>
+            <todo-items-remaining></todo-items-remaining>
         </div>
         <div class="extra-container">
             <todo-filtered></todo-filtered>
             <div>
                 <transition name="fade">
-                    <todo-clear-complete :showClearCompletedButton="showClearCompletedButton"></todo-clear-complete>
+                    <todo-clear-complete></todo-clear-complete>
                 </transition>
             </div>
         </div>
@@ -49,94 +49,30 @@
                 newTodo: '',
                 idForTodo: 3,
                 beforeEditCache: '',
-                filter: 'all',//Default Filter
-                todos: [//Sample Data
-                    {
-                        'id': 1,
-                        'title': 'Finish Vue Screen',
-                        'completed': false,
-                        'editing': false
-                    }, {
-                        'id': 2,
-                        'title': 'Take Over The World',
-                        'completed': false,
-                        'editing': false
-                    },
-                ]
             }
-        },
-        created() {
-            //When click on this event we call that method
-            //the reason we use Event bus is because now we have all emit event on this created method
-            eventBus.$on('removedTodo', (index) => this.removeTodo(index));
-            eventBus.$on('finishedEdit', (data) => this.finishedEdit(data));
-            eventBus.$on('checkAllChanged', (checked) => this.checkAllTodos(checked));
-            eventBus.$on('filterChanged', (filter) => this.filter = filter);
-            eventBus.$on('clearCompletedTodos', () => this.clearCompleted());
-        },
-        beforeDestroy() {
-            eventBus.$off('removedTodo', (index) => this.removeTodo(index));
-            eventBus.$off('finishedEdit', (data) => this.finishedEdit(data));
-            eventBus.$off('checkAllChanged', (checked) => this.checkAllTodos(checked));
-            eventBus.$off('filterChanged', (filter) => this.filter = filter);
-            eventBus.$off('clearCompletedTodos', () => this.clearCompleted());
         },
         computed: {
-            remainig() {//For Remaining Items
-                return this.todos.filter(todo => !todo.completed).length
-            },
             anyRemaining() {//Check if there is Remaining Items
-                return this.remainig != 0;
+                return this.$store.getters.anyRemaining;
             },
             todosFiltered() {//Filter Items
-                if (this.filter == 'all') {
-                    return this.todos;
-                } else if (this.filter == 'active') {
-                    return this.todos.filter(todo => !todo.completed)
-                } else if (this.filter == 'completed') {
-                    return this.todos.filter(todo => todo.completed)
-                }
-                return this.todos;
+                return this.$store.getters.todosFiltered;
             },
-            showClearCompletedButton() {//For Check to show Clear Complete Button
-                return this.todos.filter(todo => todo.completed).length > 0
-            }
         },
         methods: {
             addTodo() {//Add to Do
                 if (this.newTodo.trim().length == 0) {//Validation
                     return
                 }
-                this.todos.push({//Add Item to List
+                this.$store.dispatch('addTodo', {
                     id: this.idForTodo,
                     title: this.newTodo,
-                    completed: false,
                 });
                 //Clear Input
                 this.newTodo = '';
                 //Increment Id
                 this.idForTodo++;
             },
-            removeTodo(id) {//Remove Task
-                //Find Index of items and check with id passed to method
-                const index = this.todos.findIndex((item) => item.id == id);
-                //Splice 1 Item
-                this.todos.splice(index, 1);
-            },
-            checkAllTodos() {//For Check All Todos
-                this.todos.forEach(
-                    (todo) => todo.completed = event.target.checked
-                )
-            },
-            clearCompleted() {//Clear All Completed Task
-                this.todos = this.todos.filter(todo => !todo.completed)
-            },
-            finishedEdit(data) {
-                //Check Items id with data Id passed to method
-                const index = this.todos.findIndex((item) => item.id == data.id);
-                //splice 1 item
-                this.todos.splice(index, 1, data)
-            }
         }
     }
 </script>

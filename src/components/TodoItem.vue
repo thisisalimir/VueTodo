@@ -84,8 +84,7 @@
                     this.title = this.beforeEditCache;
                 }
                 this.editing = false;
-                //Create Event for pass to Parent Call finishedEdit and pass Data
-                eventBus.$emit('finishedEdit', {
+                this.$store.dispatch('updateTodo', {
                     'id': this.id,
                     'title': this.title,
                     'completed': this.completed,
@@ -97,29 +96,25 @@
                 this.editing = false;
             },
             removeTodo(id) {
-                //Here Use $emit because we want to pass this to parent component method
-                // Now first parameter is name of Event
-                // second parameter we pass item we want to pass
-                eventBus.$emit('removedTodo', id);
+                this.$store.dispatch('deleteTodo', id);
             },
             //Event Bus method
             pluralize() {
                 eventBus.$emit('pluralize');
             },
-            //Add s to Title
+            //Add 's' to Title
             handlePluralize() {
                 this.title = this.title + 's';
-                eventBus.$emit('finishedEdit', {
+                //Check Items id with data Id passed to method
+                const index = this.$store.state.todos.findIndex((item) => item.id == this.id);
+                //splice 1 item
+                this.$store.state.todos.splice(index, 1, {
                     'id': this.id,
                     'title': this.title,
                     'completed': this.completed,
                     'editing': this.editing,
-                });
+                })
             }
         }
     }
 </script>
-
-<style scoped>
-
-</style>
