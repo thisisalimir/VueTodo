@@ -51,6 +51,9 @@
                 beforeEditCache: '',
             }
         },
+        created() {
+            this.$store.dispatch('retriveTodos');
+        },
         computed: {
             anyRemaining() {//Check if there is Remaining Items
                 return this.$store.getters.anyRemaining;
