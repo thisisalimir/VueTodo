@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
+import db from '../firebase'
 
 //Vuex is state management pattern for our Application
 //its centralized store for all component
@@ -13,6 +14,8 @@ axios.defaults.baseURL = "http://127.0.0.1:8000/api";
 export const store = new Vuex.Store({
     //state: is one store for our application which means all data we have
     state: {
+        //Loading
+        loading: true,
         filter: 'all',//Default Filter
         todos: []
     },
@@ -86,68 +89,87 @@ export const store = new Vuex.Store({
     actions: {
         //Get All Tasks
         retrieveTodos(context) {
-            axios.get('/todos')
-                .then(response => {
-                    //Pass Data to Mutations method 'retrieveTodos'
-                    context.commit('retrieveTodos', response.data)
+            context.state.loading = true;
+            //Get Task From firestore DB
+            db.collection('todos').get()
+                .then(querySnapshot => {
+                    let tempTodos = [];
+                    querySnapshot.forEach(
+                        doc => {
+                            const data = {
+                                id: doc.id,
+                                title: doc.data().title,
+                                completed: doc.data().completed,
+                                timestamp: doc.data().timestamp,
+                            };
+                            tempTodos.push(data)
+                        });
+                    context.state.loading = false;
+                    //Sort by Timestamp because Firebase is NoSql
+                    const tempTodosSorted = tempTodos.sort((a, b) => {
+                        return a.timestamp.seconds - b.timestamp.seconds;
+                    });
+                    context.commit('retrieveTodos', tempTodosSorted)
                 })
         },
         //Adding Todos
         addTodo(context, todo) {
-            axios.post('/todos', {
+            db.collection('todos').add({
                 title: todo.title,
                 completed: false,
-            }).then(response => {
-                context.commit('addTodo', response.data)
+                timestamp: new Date(),
+            }).then(docRef => {
+                context.commit('addTodo', {
+                    id: docRef.id,
+                    title: todo.title,
+                    completed: false,
+                })
             });
         },
         clearCompleted(context) {
-            //Get All todos that has completed and also get Id
-            const completed = context.state.todos
-                .filter(todo => todo.completed)
-                .map(todo => todo.id);
-
-            axios.delete('/todosDeleteCompleted', {
-                data: {
-                    todos: completed
-                }
-            })
-                .then(response => {
-                    context.commit('clearCompleted')
-                })
-                .catch(error => {
-                    console.log(error)
-                })
+            db.collection('todos').where('completed', '==', true).get()
+                .then(querySnapShot => {
+                    querySnapShot.forEach(doc => {
+                        doc.ref.delete()
+                            .then(() => {
+                                context.commit('clearCompleted')
+                            })
+                    })
+                });
         },
         updateFilter(context, filter) {
             context.commit('updateFilter', filter);
         },
         //Checked All Todos
         checkAll(context, checked) {
-            axios.patch('/todosCheckAll', {
-                completed: checked
-            }).then(response => {
-                context.commit('checkAll', checked);
-            });
+            db.collection('todos').get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.update({
+                            completed: checked
+                        }).then(() => {
+                            context.commit('checkAll', checked);
+                        })
+                    })
+                });
+
         },
         deleteTodo(context, id) {
-            axios.delete('/todos/' + id)
-                .then(response => {
+            db.collection('todos').doc(id).delete()
+                .then(() => {
                     context.commit('deleteTodo', id)
                 });
         },
         //Update Todos
         updateTodo(context, todo) {
-            axios.patch('/todos/' + todo.id, {
+            db.collection('todos').doc(todo.id).set({
+                id: todo.id,
                 title: todo.title,
                 completed: todo.completed,
-            })
-                .then(response => {
-                    context.commit('updateTodo', response.data)
-                })
-                .catch(error => {
-                    console.log(error)
-                })
+                timestamp: new Date(),
+            }).then(() => {
+                context.commit('updateTodo', todo)
+            });
         }
     }
 });
