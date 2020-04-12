@@ -59,6 +59,7 @@
         },
         //After Create Instance of Vue retrieve Data from action method
         created() {
+            this.$store.dispatch('initRealtimeListeners');
             this.$store.dispatch('retrieveTodos');
         },
         computed: {

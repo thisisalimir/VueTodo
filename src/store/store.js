@@ -50,6 +50,7 @@ export const store = new Vuex.Store({
                 id: todo.id,
                 title: todo.title,
                 completed: todo.completed,
+                timestamp: new Date(),
                 editing: todo.editing,
             })
         },
@@ -65,8 +66,10 @@ export const store = new Vuex.Store({
         deleteTodo(state, id) {
             //Find Index of items and check with id passed to method
             const index = state.todos.findIndex((item) => item.id == id);
-            //Splice 1 Item
-            state.todos.splice(index, 1);
+            if (index > 0) {
+                //Splice 1 Item
+                state.todos.splice(index, 1);
+            }
         },
         updateTodo(state, todo) {
             //Check Items id with data Id passed to method
@@ -82,14 +85,44 @@ export const store = new Vuex.Store({
         //Get todos and bind to todos state
         retrieveTodos(state, todos) {
             state.todos = todos;
+        },
+        updateLoading(state, loading) {
+            state.loading = loading;
         }
     },
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
+        initRealtimeListeners(context) {
+            db.collection('todos').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(function (change) {
+                    if (change.type == 'added') {
+                        const source = change.doc.metadata.hasPendingWrites ? "Local" : "Server";
+                        if (source == 'Server') {
+                            context.commit('addTodo', {
+                                id: change.doc.id,
+                                title: change.doc.data().title,
+                                completed: false,
+                            })
+                        }
+
+                    }
+                    if (change.type == 'modified') {
+                        context.commit('updateTodo', {
+                            id: change.doc.id,
+                            title: change.doc.data().title,
+                            completed: change.doc.data().completed,
+                        })
+                    }
+                    if (change.type == 'removed') {
+                        context.commit('deleteTodo', change.doc.id);
+                    }
+                })
+            });
+        },
         //Get All Tasks
         retrieveTodos(context) {
-            context.state.loading = true;
+            context.commit('updateLoading', true);
             //Get Task From firestore DB
             db.collection('todos').get()
                 .then(querySnapshot => {
@@ -166,10 +199,10 @@ export const store = new Vuex.Store({
                 id: todo.id,
                 title: todo.title,
                 completed: todo.completed,
-                timestamp: new Date(),
-            }).then(() => {
+                // timestamp: new Date(),
+            }, {merge: true}).then(() => {
                 context.commit('updateTodo', todo)
-            });
+            },);
         }
     }
 });

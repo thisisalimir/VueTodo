@@ -63,6 +63,10 @@
             checkAll() {
                 //Check if all Items checked then make it true otherwise single file checked
                 this.completed = this.checkAll ? true : this.todo.completed;
+            },
+            todo() {
+                this.title = this.todo.title;
+                this.completed = this.todo.completed;
             }
         },
         directives: {
@@ -105,13 +109,11 @@
             //Add 's' to Title
             handlePluralize() {
                 this.title = this.title + 's';
-                //Check Items id with data Id passed to method
-                const index = this.$store.state.todos.findIndex((item) => item.id == this.id);
-                //splice 1 item
-                this.$store.state.todos.splice(index, 1, {
+                this.$store.dispatch('updateTodo', {
                     'id': this.id,
                     'title': this.title,
                     'completed': this.completed,
+                    'timestamp': this.timestamp,
                     'editing': this.editing,
                 })
             }
