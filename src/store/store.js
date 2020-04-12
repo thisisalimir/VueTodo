@@ -6,7 +6,7 @@ import axios from 'axios';
 //its centralized store for all component
 //so basically we have all our component in one place so we dont duplicate and have clean code
 Vue.use(Vuex);
-
+//Declare Our Api url
 axios.defaults.baseURL = "http://127.0.0.1:8000/api";
 
 //Declare Our Vuex Instance and Set to store variable
@@ -39,7 +39,7 @@ export const store = new Vuex.Store({
             return state.todos.filter(todo => todo.completed).length > 0
         }
     },
-    //mutations: are similar to event again methods get state as first parameter
+    //mutations: are similar to event again methods get 'state' as first parameter
     //also for call it from component we should use 'commit'
     mutations: {
         addTodo(state, todo) {
@@ -76,19 +76,23 @@ export const store = new Vuex.Store({
                 'editing': todo.editing,
             })
         },
-        retriveTodos(state, todos) {
+        //Get todos and bind to todos state
+        retrieveTodos(state, todos) {
             state.todos = todos;
         }
     },
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
-        retriveTodos(context) {
+        //Get All Tasks
+        retrieveTodos(context) {
             axios.get('/todos')
                 .then(response => {
-                    context.commit('retriveTodos', response.data)
+                    //Pass Data to Mutations method 'retrieveTodos'
+                    context.commit('retrieveTodos', response.data)
                 })
         },
+        //Adding Todos
         addTodo(context, todo) {
             axios.post('/todos', {
                 title: todo.title,
@@ -98,6 +102,7 @@ export const store = new Vuex.Store({
             });
         },
         clearCompleted(context) {
+            //Get All todos that has completed and also get Id
             const completed = context.state.todos
                 .filter(todo => todo.completed)
                 .map(todo => todo.id);
@@ -117,6 +122,7 @@ export const store = new Vuex.Store({
         updateFilter(context, filter) {
             context.commit('updateFilter', filter);
         },
+        //Checked All Todos
         checkAll(context, checked) {
             axios.patch('/todosCheckAll', {
                 completed: checked
@@ -125,10 +131,12 @@ export const store = new Vuex.Store({
             });
         },
         deleteTodo(context, id) {
-            axios.delete('/todos/' + id).then(response => {
-                context.commit('deleteTodo', id)
-            });
+            axios.delete('/todos/' + id)
+                .then(response => {
+                    context.commit('deleteTodo', id)
+                });
         },
+        //Update Todos
         updateTodo(context, todo) {
             axios.patch('/todos/' + todo.id, {
                 title: todo.title,

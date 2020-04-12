@@ -51,8 +51,9 @@
                 beforeEditCache: '',
             }
         },
+        //After Create Instance of Vue retrieve Data from action method
         created() {
-            this.$store.dispatch('retriveTodos');
+            this.$store.dispatch('retrieveTodos');
         },
         computed: {
             anyRemaining() {//Check if there is Remaining Items
