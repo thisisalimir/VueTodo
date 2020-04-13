@@ -123,86 +123,70 @@ export const store = new Vuex.Store({
         //Get All Tasks
         retrieveTodos(context) {
             context.commit('updateLoading', true);
-            //Get Task From firestore DB
-            db.collection('todos').get()
-                .then(querySnapshot => {
-                    let tempTodos = [];
-                    querySnapshot.forEach(
-                        doc => {
-                            const data = {
-                                id: doc.id,
-                                title: doc.data().title,
-                                completed: doc.data().completed,
-                                timestamp: doc.data().timestamp,
-                            };
-                            tempTodos.push(data)
-                        });
+            axios.get('/todos')
+                .then(response => {
                     context.state.loading = false;
-                    //Sort by Timestamp because Firebase is NoSql
-                    const tempTodosSorted = tempTodos.sort((a, b) => {
-                        return a.timestamp.seconds - b.timestamp.seconds;
-                    });
-                    context.commit('retrieveTodos', tempTodosSorted)
+                    //Pass Data to Mutations method 'retrieveTodos'
+                    context.commit('retrieveTodos', response.data)
                 })
         },
         //Adding Todos
         addTodo(context, todo) {
-            db.collection('todos').add({
+            axios.post('/todos', {
                 title: todo.title,
                 completed: false,
-                timestamp: new Date(),
-            }).then(docRef => {
-                context.commit('addTodo', {
-                    id: docRef.id,
-                    title: todo.title,
-                    completed: false,
-                })
+            }).then(response => {
+                context.commit('addTodo', response.data)
             });
         },
         clearCompleted(context) {
-            db.collection('todos').where('completed', '==', true).get()
-                .then(querySnapShot => {
-                    querySnapShot.forEach(doc => {
-                        doc.ref.delete()
-                            .then(() => {
-                                context.commit('clearCompleted')
-                            })
-                    })
-                });
+            //Get All todos that has completed and also get Id
+            const completed = context.state.todos
+                .filter(todo => todo.completed)
+                .map(todo => todo.id);
+
+            axios.delete('/todosDeleteCompleted', {
+                data: {
+                    todos: completed
+                }
+            })
+                .then(response => {
+                    context.commit('clearCompleted')
+                })
+                .catch(error => {
+                    console.log(error)
+                })
         },
         updateFilter(context, filter) {
             context.commit('updateFilter', filter);
         },
         //Checked All Todos
         checkAll(context, checked) {
-            db.collection('todos').get()
-                .then(querySnapshot => {
-                    querySnapshot.forEach(doc => {
-                        doc.ref.update({
-                            completed: checked
-                        }).then(() => {
-                            context.commit('checkAll', checked);
-                        })
-                    })
-                });
-
+            axios.patch('/todosCheckAll', {
+                completed: checked
+            }).then(response => {
+                context.commit('checkAll', checked);
+            });
         },
+
         deleteTodo(context, id) {
-            db.collection('todos').doc(id).delete()
-                .then(() => {
+            axios.delete('/todos/' + id)
+                .then(response => {
                     context.commit('deleteTodo', id)
                 });
         },
         //Update Todos
         updateTodo(context, todo) {
-            db.collection('todos').doc(todo.id).set({
-                id: todo.id,
+            axios.patch('/todos/' + todo.id, {
                 title: todo.title,
                 completed: todo.completed,
-                // timestamp: new Date(),
-            }, {merge: true}).then(() => {
-                context.commit('updateTodo', todo)
-            },);
+            })
+                .then(response => {
+                    context.commit('updateTodo', response.data)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
         }
     }
 });
