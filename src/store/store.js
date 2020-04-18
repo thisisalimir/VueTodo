@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
-import db from '../firebase'
+// import db from '../firebase'
 
 //Vuex is state management pattern for our Application
 //its centralized store for all component
@@ -14,6 +14,7 @@ axios.defaults.baseURL = "http://127.0.0.1:8000/api";
 export const store = new Vuex.Store({
     //state: is one store for our application which means all data we have
     state: {
+        token: localStorage.getItem('access_token') || null,
         //Loading
         loading: true,
         filter: 'all',//Default Filter
@@ -22,6 +23,9 @@ export const store = new Vuex.Store({
     //getters: first all methods get 'state' as first parameter
     //its computed properties for our store
     getters: {
+        loggedIn(state) {
+            return state.token !== null;
+        },
         remainig(state) {//For Remaining Items
             return state.todos.filter(todo => !todo.completed).length
         },
@@ -88,38 +92,89 @@ export const store = new Vuex.Store({
         },
         updateLoading(state, loading) {
             state.loading = loading;
+        },
+        retrieveToken(state, token) {
+            state.token = token;
+        },
+        destroyToken(state) {
+            state.token = null;
         }
     },
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
-        initRealtimeListeners(context) {
-            db.collection('todos').onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(function (change) {
-                    if (change.type == 'added') {
-                        const source = change.doc.metadata.hasPendingWrites ? "Local" : "Server";
-                        if (source == 'Server') {
-                            context.commit('addTodo', {
-                                id: change.doc.id,
-                                title: change.doc.data().title,
-                                completed: false,
-                            })
-                        }
-
-                    }
-                    if (change.type == 'modified') {
-                        context.commit('updateTodo', {
-                            id: change.doc.id,
-                            title: change.doc.data().title,
-                            completed: change.doc.data().completed,
-                        })
-                    }
-                    if (change.type == 'removed') {
-                        context.commit('deleteTodo', change.doc.id);
-                    }
-                })
+        register(context, data) {
+            return new Promise((resolve, reject) => {
+                axios.post('/register', {
+                    name: data.name,
+                    email: data.email,
+                    password: data.password,
+                }).then(response => {
+                    resolve(response)
+                }).catch(error => {
+                    reject(error);
+                });
             });
         },
+        destroyToken(context) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token;
+            if (context.getters.loggedIn) {
+                return new Promise((resolve, reject) => {
+                    axios.post('/logout').then(response => {
+                        localStorage.removeItem('access_token');
+                        context.commit('destroyToken');
+                        resolve(response)
+                    }).catch(error => {
+                        localStorage.removeItem('access_token');
+                        context.commit('destroyToken');
+                        reject(error);
+                    });
+                });
+            }
+        },
+        retrieveToken(context, credentials) {
+            return new Promise((resolve, reject) => {
+                axios.post('/login', {
+                    username: credentials.username,
+                    password: credentials.password,
+                }).then(response => {
+                    const token = response.data.access_token;
+                    localStorage.setItem('access_token', token);
+                    context.commit('retrieveToken', token);
+                    resolve(response)
+                }).catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+            });
+        },
+        // initRealtimeListeners(context) {
+        //     db.collection('todos').onSnapshot(snapshot => {
+        //         snapshot.docChanges().forEach(function (change) {
+        //             if (change.type == 'added') {
+        //                 const source = change.doc.metadata.hasPendingWrites ? "Local" : "Server";
+        //                 if (source == 'Server') {
+        //                     context.commit('addTodo', {
+        //                         id: change.doc.id,
+        //                         title: change.doc.data().title,
+        //                         completed: false,
+        //                     })
+        //                 }
+        //
+        //             }
+        //             if (change.type == 'modified') {
+        //                 context.commit('updateTodo', {
+        //                     id: change.doc.id,
+        //                     title: change.doc.data().title,
+        //                     completed: change.doc.data().completed,
+        //                 })
+        //             }
+        //             if (change.type == 'removed') {
+        //                 context.commit('deleteTodo', change.doc.id);
+        //             }
+        //         })
+        //     });
+        // },
         //Get All Tasks
         retrieveTodos(context) {
             context.commit('updateLoading', true);
