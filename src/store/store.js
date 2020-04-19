@@ -23,7 +23,7 @@ export const store = new Vuex.Store({
     //getters: first all methods get 'state' as first parameter
     //its computed properties for our store
     getters: {
-        loggedIn(state) {
+        loggedIn(state) {//For check if user has token
             return state.token !== null;
         },
         remainig(state) {//For Remaining Items
@@ -103,9 +103,9 @@ export const store = new Vuex.Store({
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
-        register(context, data) {
+        register(context, data) {//Register User
             return new Promise((resolve, reject) => {
-                axios.post('/register', {
+                axios.post('/register', {//Pass Data
                     name: data.name,
                     email: data.email,
                     password: data.password,
@@ -116,8 +116,8 @@ export const store = new Vuex.Store({
                 });
             });
         },
-        destroyToken(context) {
-            axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token;
+        destroyToken(context) {//For Time When User Logout
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token;//Pass Header
             if (context.getters.loggedIn) {
                 return new Promise((resolve, reject) => {
                     axios.post('/logout').then(response => {
@@ -132,12 +132,12 @@ export const store = new Vuex.Store({
                 });
             }
         },
-        retrieveToken(context, credentials) {
+        retrieveToken(context, credentials) {//Login User
             return new Promise((resolve, reject) => {
                 axios.post('/login', {
                     username: credentials.username,
                     password: credentials.password,
-                }).then(response => {
+                }).then(response => {//get Token For use on other page
                     const token = response.data.access_token;
                     localStorage.setItem('access_token', token);
                     context.commit('retrieveToken', token);

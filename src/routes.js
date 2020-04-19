@@ -15,7 +15,7 @@ const routes = [
         path: '/todo',
         name: 'todo',
         component: App,
-        meta: {
+        meta: {//Check if Auth
             requiresAuth: true
         }
     },
@@ -28,7 +28,7 @@ const routes = [
         path: '/login',
         name: 'login',
         component: Login,
-        meta: {
+        meta: {//check if User is Guest
             requiresVisitor: true
         }
     },

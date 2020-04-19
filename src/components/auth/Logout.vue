@@ -3,7 +3,7 @@
 
 <script>
     export default {
-        created() {
+        created() {//after logout redirect to home
             this.$store.dispatch('destroyToken').then(response => {
                 this.$router.push({name: 'home'});
             });

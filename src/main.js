@@ -29,8 +29,7 @@ router.beforeEach((to, from, next) => {
             next()
         }
     }  else if (to.matched.some(record => record.meta.requiresVisitor)) {
-        // this route requires auth, check if logged in
-        // if not, redirect to login page.
+        // this route not requires auth, check if logged in redirect to task page.
         if (store.getters.loggedIn) {
             next({
                 name: 'todo',
