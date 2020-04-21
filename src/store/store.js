@@ -98,11 +98,17 @@ export const store = new Vuex.Store({
         },
         destroyToken(state) {
             state.token = null;
+        },
+        clearTodos(state) {
+            state.todos = [];
         }
     },
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
+        clearTodos(context) {
+            context.commit('clearTodos');
+        },
         register(context, data) {//Register User
             return new Promise((resolve, reject) => {
                 axios.post('/register', {//Pass Data
@@ -177,6 +183,7 @@ export const store = new Vuex.Store({
         // },
         //Get All Tasks
         retrieveTodos(context) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token;//Pass Header
             context.commit('updateLoading', true);
             axios.get('/todos')
                 .then(response => {
