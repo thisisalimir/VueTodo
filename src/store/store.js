@@ -106,6 +106,16 @@ export const store = new Vuex.Store({
     //actions: are same as mutations but is for task that take some time like Ajax and also for parameter we use context
     //also for call it from component we should use 'dispatch'
     actions: {
+        retrieveName(context) {
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token;//Pass Header
+            return new Promise((resolve, reject) => {
+                axios.get('/user').then(response => {
+                    resolve(response)
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
         clearTodos(context) {
             context.commit('clearTodos');
         },
@@ -138,21 +148,23 @@ export const store = new Vuex.Store({
                 });
             }
         },
-        retrieveToken(context, credentials) {//Login User
+        retrieveToken(context, credentials) {
             return new Promise((resolve, reject) => {
                 axios.post('/login', {
                     username: credentials.username,
                     password: credentials.password,
-                }).then(response => {//get Token For use on other page
-                    const token = response.data.access_token;
-                    localStorage.setItem('access_token', token);
-                    context.commit('retrieveToken', token);
-                    resolve(response)
-                }).catch(error => {
-                    console.log(error);
-                    reject(error);
-                });
-            });
+                })
+                    .then(response => {
+                        const token = response.data.access_token;
+
+                        localStorage.setItem('access_token', token);
+                        context.commit('retrieveToken', token);
+                        resolve(response)
+                    })
+                    .catch(error => {
+                        reject(error)
+                    })
+            })
         },
         // initRealtimeListeners(context) {
         //     db.collection('todos').onSnapshot(snapshot => {

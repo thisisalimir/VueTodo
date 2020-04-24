@@ -1,5 +1,7 @@
 <template>
-    <div>About</div>
+    <div class="page-wrapper flex-center">
+        About
+    </div>
 </template>
 
 <script>

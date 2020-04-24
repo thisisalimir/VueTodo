@@ -28,6 +28,7 @@ const routes = [
         path: '/login',
         name: 'login',
         component: Login,
+        props: true,
         meta: {//check if User is Guest
             requiresVisitor: true
         }

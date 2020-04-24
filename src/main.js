@@ -5,12 +5,22 @@ import VueRouter from 'vue-router'
 import Master from "./components/layouts/Master";
 import {store} from './store/store'
 import routes from "./routes";
+import CxltToastr from 'cxlt-vue2-toastr';
+
+const toastrConfigs = {
+    position: 'top right',
+    showDuration: 2000,
+    timeout: 5000,
+    progressBar: true,
+};
 
 //Event Bus: Allows All Component to communicate and not limit to Parent child
 window.eventBus = new Vue();
 
 Vue.config.productionTip = false;
 Vue.use(VueRouter);
+Vue.use(CxltToastr);
+Vue.use(CxltToastr, toastrConfigs);
 
 const router = new VueRouter({
     routes,
@@ -28,7 +38,7 @@ router.beforeEach((to, from, next) => {
         } else {
             next()
         }
-    }  else if (to.matched.some(record => record.meta.requiresVisitor)) {
+    } else if (to.matched.some(record => record.meta.requiresVisitor)) {
         // this route not requires auth, check if logged in redirect to task page.
         if (store.getters.loggedIn) {
             next({
@@ -37,7 +47,7 @@ router.beforeEach((to, from, next) => {
         } else {
             next()
         }
-    }  else {
+    } else {
         next() // make sure to always call next()!
     }
 });

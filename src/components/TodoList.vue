@@ -1,5 +1,8 @@
 <template>
     <div>
+        <div class="name-container">
+            Welcome, {{ name }}
+        </div>
         <!--   V-model For Bind Data To Input
                @keyup.enter is for Time User Type on input and press Enter
                also we add addTodo() Method-->
@@ -52,15 +55,20 @@
         },
         data() {
             return {
+                name: '',
                 newTodo: '',
                 idForTodo: 3,
-                beforeEditCache: '',
+                // beforeEditCache: '',
             }
         },
         //After Create Instance of Vue retrieve Data from action method
         created() {
             // this.$store.dispatch('initRealtimeListeners');
             this.$store.dispatch('retrieveTodos');
+            this.$store.dispatch('retrieveName')
+                .then(response => {
+                    this.name = response.data.name;
+                });
         },
         computed: {
             anyRemaining() {//Check if there is Remaining Items
@@ -90,7 +98,6 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
-    @import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css");
 
     .todo-input {
         width: 100%;
