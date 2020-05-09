@@ -1,5 +1,5 @@
 <template>
-    <div class="todo-item">
+    <div class="todo-item appearance-none block w-full bg-gray-700 text-white border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white">
         <div class="todo-item-left">
             <!--Complete
                 When Change We check For Done Editing-->

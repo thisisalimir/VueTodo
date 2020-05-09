@@ -1,12 +1,9 @@
 <template>
     <div>
-        <div class="name-container">
-            Welcome, {{ name }}
-        </div>
         <!--   V-model For Bind Data To Input
                @keyup.enter is for Time User Type on input and press Enter
                also we add addTodo() Method-->
-        <input type="text" class="todo-input" placeholder="What Needs To Be Done?" v-model="newTodo"
+        <input type="text" class="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" placeholder="What Needs To Be Done?" v-model="newTodo"
                @keyup.enter="addTodo">
         <div v-if="$store.state.loading" class="lds-ring">
             <div></div>
@@ -55,7 +52,7 @@
         },
         data() {
             return {
-                name: '',
+                // name: '',
                 newTodo: '',
                 idForTodo: 3,
                 // beforeEditCache: '',
@@ -65,10 +62,10 @@
         created() {
             // this.$store.dispatch('initRealtimeListeners');
             this.$store.dispatch('retrieveTodos');
-            this.$store.dispatch('retrieveName')
-                .then(response => {
-                    this.name = response.data.name;
-                });
+            // this.$store.dispatch('retrieveName')
+            //     .then(response => {
+            //         this.name = response.data.name;
+            //     });
         },
         computed: {
             anyRemaining() {//Check if there is Remaining Items
@@ -99,17 +96,6 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
 
-    .todo-input {
-        width: 100%;
-        padding: 10px 18px;
-        font-size: 18px;
-        margin-bottom: 16px;
-
-        &:focus {
-            outline: 0;
-        }
-    }
-
     .todo-item {
         margin-bottom: 12px;
         display: flex;
@@ -119,11 +105,12 @@
     }
 
     .remove-item {
+        color: red;
         cursor: pointer;
         margin-left: 14px;
 
         &:hover {
-            color: black;
+            color: white;
         }
     }
 
@@ -136,6 +123,7 @@
         padding: 10px;
         border: 1px solid white;
         margin-left: 12px;
+        border-radius: 3px;
     }
 
     .todo-item-edit {
@@ -154,7 +142,7 @@
 
     .completed {
         text-decoration: line-through;
-        color: grey;
+        color: green;
     }
 
     .extra-container {
@@ -169,12 +157,13 @@
 
     button {
         font-size: 14px;
-        background-color: white;
+        background-color: grey;
         appearance: none;
-        padding: 4px;
+        padding: 6px;
+        border-radius: 3px;
 
         &:hover {
-            background: lightgreen;
+            background: #354a5e;
         }
 
         &:focus {
@@ -183,7 +172,7 @@
     }
 
     .active {
-        background: lightgreen;
+        background: #354a5e;
     }
 
     // CSS Transitions
